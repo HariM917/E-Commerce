@@ -1,0 +1,27 @@
+services:
+  # A Docker-based or Node-based Web Service for the Backend
+  - type: web
+    name: e-commerce-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  # A Static Site for the Frontend
+  - type: static
+    name: e-commerce-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://e-commerce-backend.onrender.com/api
