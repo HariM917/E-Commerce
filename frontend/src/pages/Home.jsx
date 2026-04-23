@@ -1,4 +1,8 @@
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import { useLocation, Link } from 'react-router-dom';
+import { ShoppingCart } from 'lucide-react';
+import { CartContext } from '../context/CartContext';
 
 const Home = () => {
     const [products, setProducts] = useState([]);
