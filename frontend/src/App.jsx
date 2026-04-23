@@ -8,27 +8,14 @@ import Register from './pages/Register';
 import ProductDetails from './pages/ProductDetails';
 import Cart from './pages/Cart';
 import Dashboard from './pages/Dashboard';
-
-const Navigation = () => (
-    <nav className="animate-fade-in delay-1">
-        <div className="container nav-content">
-            <Link to="/" className="logo">E-Store</Link>
-            <div style={{display: 'flex', gap: '1.5rem', alignItems: 'center'}}>
-                <Link to="/" className="nav-link">Home</Link>
-                <Link to="/cart" className="nav-link">Cart</Link>
-                <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                <Link to="/login" className="btn-primary">Login</Link>
-            </div>
-        </div>
-    </nav>
-);
+import Header from './components/Header';
 
 function App() {
     return (
         <AuthProvider>
             <CartProvider>
                 <Router>
-                    <Navigation />
+                    <Header />
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/products/:id" element={<ProductDetails />} />
