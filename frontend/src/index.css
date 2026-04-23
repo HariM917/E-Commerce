@@ -66,7 +66,7 @@ button {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow- premium);
+  box-shadow: var(--shadow-premium);
 }
 
 /* Base Components */
