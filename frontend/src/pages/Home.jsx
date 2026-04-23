@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
-import { CartContext } from '../context/CartContext';
+import { useLocation } from 'react-router-dom';
 
 const Home = () => {
     const [products, setProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const { addToCart } = useContext(CartContext);
+    const location = useLocation();
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const productsPerPage = 12;
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`);
                 setProducts(res.data);
+                setFilteredProducts(res.data);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -22,6 +25,30 @@ const Home = () => {
         };
         fetchProducts();
     }, []);
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        const search = queryParams.get('search');
+        
+        if (search) {
+            const filtered = products.filter(p => 
+                p.name.toLowerCase().includes(search.toLowerCase()) || 
+                p.category.toLowerCase().includes(search.toLowerCase())
+            );
+            setFilteredProducts(filtered);
+        } else {
+            setFilteredProducts(products);
+        }
+        setCurrentPage(1);
+    }, [location.search, products]);
+
+    // Get current products
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     if (loading) {
         return (
@@ -51,12 +78,12 @@ const Home = () => {
                 </div>
 
                 <div className="product-grid">
-                    {products.length === 0 ? (
+                    {currentProducts.length === 0 ? (
                         <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', background: '#fff', borderRadius: '4px' }}>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>No products found!</p>
                         </div>
                     ) : (
-                        products.map((product) => (
+                        currentProducts.map((product) => (
                             <div key={product._id} className="card" style={{ display: 'flex', flexDirection: 'column', padding: '16px' }}>
                                 <Link to={`/products/${product._id}`} style={{ display: 'block', height: '220px', marginBottom: '16px', borderRadius: '4px', overflow: 'hidden', background: '#f5f5f5' }}>
                                     <img 
@@ -106,6 +133,29 @@ const Home = () => {
                         ))
                     )}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', gap: '8px' }}>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i + 1}
+                                onClick={() => paginate(i + 1)}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    border: '1px solid var(--border-color)',
+                                    background: currentPage === i + 1 ? 'var(--primary-color)' : '#fff',
+                                    color: currentPage === i + 1 ? '#fff' : 'var(--text-primary)',
+                                    fontWeight: '500',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {i + 1}
+                            </button>
+                        )).slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))}
+                    </div>
+                )}
             </div>
         </div>
     );

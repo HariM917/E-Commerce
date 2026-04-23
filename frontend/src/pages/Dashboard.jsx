@@ -12,6 +12,29 @@ const Dashboard = () => {
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const updateOrderStatus = async (orderId, newStatus) => {
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/orders/${orderId}/status`, { status: newStatus });
+            setAllOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+            alert('Order status updated!');
+        } catch (error) {
+            console.error(error);
+            alert('Failed to update status');
+        }
+    };
+
+    const deleteProduct = async (productId) => {
+        if (!window.confirm('Are you sure you want to delete this product?')) return;
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/${productId}`);
+            setAllProducts(prev => prev.filter(p => p._id !== productId));
+            alert('Product deleted!');
+        } catch (error) {
+            console.error(error);
+            alert('Failed to delete product');
+        }
+    };
+
     useEffect(() => {
         if (!user) {
             navigate('/login');
@@ -96,9 +119,22 @@ const Dashboard = () => {
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
                                                 <p style={{ fontWeight: '500', marginBottom: '4px' }}>${order.totalAmount.toFixed(2)}</p>
-                                                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: order.status === 'Delivered' ? '#1e8e3e' : '#f57c00' }}>
-                                                    {order.status}
-                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                                                    <span style={{ fontSize: '0.85rem', fontWeight: '500', color: order.status === 'Delivered' ? '#1e8e3e' : '#f57c00' }}>
+                                                        {order.status}
+                                                    </span>
+                                                    <select 
+                                                        value={order.status}
+                                                        onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                                                        style={{ fontSize: '0.8rem', padding: '2px 4px' }}
+                                                    >
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="Processing">Processing</option>
+                                                        <option value="Shipped">Shipped</option>
+                                                        <option value="Delivered">Delivered</option>
+                                                        <option value="Cancelled">Cancelled</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -112,9 +148,20 @@ const Dashboard = () => {
                                 </div>
                                 <div style={{ padding: '24px' }}>
                                     {allProducts.map(product => (
-                                        <div key={product._id} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
-                                            <span style={{ fontWeight: '500' }}>{product.name}</span>
-                                            <span style={{ fontWeight: '500', color: 'var(--text-secondary)' }}>${product.price.toFixed(2)}</span>
+                                        <div key={product._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                                            <div style={{ flex: 1 }}>
+                                                <span style={{ fontWeight: '500' }}>{product.name}</span>
+                                                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Category: {product.category} | SKU: {product._id.substring(18)}</p>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                <span style={{ fontWeight: '500', color: 'var(--text-secondary)' }}>${product.price.toFixed(2)}</span>
+                                                <button 
+                                                    onClick={() => deleteProduct(product._id)}
+                                                    style={{ color: '#d32f2f', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}
+                                                >
+                                                    DELETE
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

@@ -12,7 +12,11 @@ const Header = () => {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        // Optional search logic could be placed here
+        if (searchQuery.trim()) {
+            navigate(`/?search=${searchQuery}`);
+        } else {
+            navigate('/');
+        }
     };
 
     const cartCount = cartItems ? cartItems.reduce((acc, item) => acc + item.quantity, 0) : 0;
