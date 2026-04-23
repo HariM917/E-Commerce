@@ -9,15 +9,15 @@ dotenv.config();
 
 const users = [
   {
-    name: 'Admin User',
-    email: 'admin@example.com',
-    password: 'password123',
+    name: 'Admin',
+    email: '',
+    password: '',
     role: 'admin',
   },
   {
-    name: 'John Doe',
-    email: 'john@example.com',
-    password: 'password123',
+    name: '',
+    email: '',
+    password: '',
     role: 'user',
   },
 ];
