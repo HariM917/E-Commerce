@@ -78,7 +78,7 @@ app.get('/api/seed', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.send('API is running... (v2)');
 });
 
 const PORT = process.env.PORT || 5000;
