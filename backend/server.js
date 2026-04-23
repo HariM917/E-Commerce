@@ -10,21 +10,8 @@ const Product = require('./models/Product');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
 
-// Custom Logging
-const logPath = path.join(__dirname, 'logs.txt');
-const logger = (msg) => {
-    const entry = `${new Date().toISOString()} - ${msg}\n`;
-    fs.appendFileSync(logPath, entry);
-    console.log(msg);
-};
-logger('Server starting...');
-
-// Load env vars
-dotenv.config();
-
 // Connect to database
-logger('Connecting to DB...');
-connectDB().then(() => logger('DB connected!')).catch(err => logger('DB Error: ' + err.message));
+connectDB();
 
 const app = express();
 
@@ -37,81 +24,16 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 
-// Remote Log Viewer
-app.get('/api/logs', (req, res) => {
-    if (fs.existsSync(logPath)) {
-        res.sendFile(logPath);
-    } else {
-        res.send('No logs found');
-    }
-});
-
 // Health Check Route
 app.get('/api/health', (req, res) => {
-    try {
-        res.json({ 
-            status: 'live', 
-            version: 'v2.1', 
-            database: mongoose.connection.readyState 
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Temporary Seeding Route
-app.get('/api/seed', async (req, res) => {
-    try {
-        const products = [];
-        const csvFilePath = path.join(__dirname, 'amazon.csv');
-
-        if (!fs.existsSync(csvFilePath)) {
-            return res.status(404).json({ message: 'amazon.csv not found' });
-        }
-
-        fs.createReadStream(csvFilePath)
-            .pipe(csv())
-            .on('data', (row) => {
-                let priceStr = row.discounted_price || row.actual_price || '0';
-                const cleanPrice = parseFloat(priceStr.replace(/[₹,]/g, '')) || 0;
-
-                products.push({
-                    name: row.product_name,
-                    description: row.about_product || 'No description available.',
-                    price: cleanPrice,
-                    image: row.img_link,
-                    category: row.category ? row.category.split('|')[0] : 'General',
-                    stock: Math.floor(Math.random() * 100) + 10
-                });
-            })
-            .on('end', async () => {
-                await Product.deleteMany({});
-                await Product.insertMany(products);
-                
-                // Ensure an admin exists
-                const adminExists = await User.findOne({ role: 'admin' });
-                if (!adminExists) {
-                    const hashedPassword = await bcrypt.hash('admin123', 10);
-                    await User.create({
-                        name: 'Admin User',
-                        email: 'admin@example.com',
-                        password: hashedPassword,
-                        role: 'admin'
-                    });
-                }
-
-                res.json({ message: `Successfully seeded ${products.length} products and ensured admin exists.` });
-            })
-            .on('error', (err) => {
-                res.status(500).json({ error: err.message });
-            });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    res.json({ 
+        status: 'live', 
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' 
+    });
 });
 
 app.get('/', (req, res) => {
-    res.send('API is running... (v2)');
+    res.send('API is running...');
 });
 
 const PORT = process.env.PORT || 5000;
