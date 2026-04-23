@@ -26,6 +26,11 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 
+// Health Check Route
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'live', version: 'v2', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
+});
+
 // Temporary Seeding Route
 app.get('/api/seed', async (req, res) => {
     try {
