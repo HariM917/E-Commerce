@@ -29,7 +29,15 @@ app.use('/api/orders', require('./routes/orders'));
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'live', version: 'v2', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
+    try {
+        res.json({ 
+            status: 'live', 
+            version: 'v2.1', 
+            database: mongoose.connection.readyState 
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Temporary Seeding Route
@@ -91,4 +99,13 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ 
+        message: 'Something went wrong!',
+        error: err.message 
+    });
 });
