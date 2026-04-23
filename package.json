@@ -4,8 +4,7 @@
   "description": "Root proxy for Render deployment",
   "scripts": {
     "install:backend": "cd backend && npm install",
-    "start": "cd backend && node server.js",
-    "build": "cd backend && npm install"
+    "start": "cd backend && node server.js"
   },
   "engines": {
     "node": ">=14.0.0"
