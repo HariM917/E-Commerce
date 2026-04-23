@@ -1,72 +1,82 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const User = require('./models/User');
+const fs = require('fs');
+const path = require('path');
+const csv = require('csv-parser');
 const Product = require('./models/Product');
-const Order = require('./models/Order');
-const connectDB = require('./config/db');
+const User = require('./models/User');
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
-const users = [
-  {
-    name: 'Admin',
-    email: '',
-    password: '',
-    role: 'admin',
-  },
-  {
-    name: '',
-    email: '',
-    password: '',
-    role: 'user',
-  },
-];
+const seedDatabase = async () => {
+    try {
+        const maskedUri = process.env.MONGODB_URI.replace(/:([^@]+)@/, ':****@');
+        console.log('Connecting to:', maskedUri);
+        await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000
+        });
+        console.log('Connected to MongoDB for seeding...');
 
-const products = [
-  {
-    name: 'Premium AirPods Pro',
-    image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-    description: 'Active Noise Cancellation blocks outside noise, so you can immerse yourself in music.',
-    category: 'Electronics',
-    price: 249.99,
-    stock: 10,
-  },
-  {
-    name: 'iPhone 14 Pro',
-    image: 'https://images.unsplash.com/photo-1663465374464-90ff66ee9fec?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-    description: 'A magical new way to interact with iPhone. Groundbreaking safety features designed to save lives.',
-    category: 'Electronics',
-    price: 999.99,
-    stock: 7,
-  },
-  {
-    name: 'Sony WH-1000XM5',
-    image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-    description: 'Industry leading noise canceling headphones with Auto Noise Canceling Optimizer.',
-    category: 'Electronics',
-    price: 398.00,
-    stock: 5,
-  },
-];
+        // 1. Create Admin User
+        await User.deleteMany({ role: 'admin' });
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        await User.create({
+            name: 'Admin User',
+            email: 'admin@example.com',
+            password: hashedPassword,
+            role: 'admin'
+        });
+        console.log('Admin user created: admin@example.com / admin123');
 
-const importData = async () => {
-  try {
-    await connectDB();
-    await Order.deleteMany();
-    await Product.deleteMany();
-    await User.deleteMany();
+        // 2. Parse CSV and Seed Products
+        const products = [];
+        const csvFilePath = path.join(__dirname, '..', 'amazon.csv');
 
-    const createdUsers = await User.create(users);
-    const adminUser = createdUsers[0]._id;
+        if (!fs.existsSync(csvFilePath)) {
+            console.error('amazon.csv not found at:', csvFilePath);
+            process.exit(1);
+        }
 
-    await Product.create(products);
+        console.log('Starting CSV parsing...');
 
-    console.log('Data Imported!');
-    process.exit();
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
-  }
+        fs.createReadStream(csvFilePath)
+            .pipe(csv())
+            .on('data', (row) => {
+                // Clean price: ₹399 -> 399, ₹1,099 -> 1099
+                let priceStr = row.discounted_price || row.actual_price || '0';
+                const cleanPrice = parseFloat(priceStr.replace(/[₹,]/g, '')) || 0;
+
+                products.push({
+                    name: row.product_name,
+                    description: row.about_product || 'No description available.',
+                    price: cleanPrice,
+                    image: row.img_link,
+                    category: row.category ? row.category.split('|')[0] : 'General',
+                    stock: Math.floor(Math.random() * 100) + 10 // Random stock between 10-100
+                });
+            })
+            .on('end', async () => {
+                console.log(`Parsed ${products.length} products. Inserting into database...`);
+                
+                await Product.deleteMany({});
+                
+                // Insert in chunks if the file is massive, but 1.4k is fine for insertMany
+                await Product.insertMany(products);
+                
+                console.log('Database Seeded Successfully with Amazon Products!');
+                mongoose.connection.close();
+                process.exit(0);
+            })
+            .on('error', (err) => {
+                console.error('Error reading CSV:', err);
+                process.exit(1);
+            });
+
+    } catch (error) {
+        console.error('Seeding Error:', error);
+        process.exit(1);
+    }
 };
 
-importData();
+seedDatabase();
