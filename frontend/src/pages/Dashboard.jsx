@@ -21,13 +21,13 @@ const Dashboard = () => {
             try {
                 if (user.role === 'admin') {
                     const [ordersRes, productsRes] = await Promise.all([
-                        axios.get('http://localhost:5000/api/orders'),
-                        axios.get('http://localhost:5000/api/products')
+                        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/orders`),
+                        axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`)
                     ]);
                     setAllOrders(ordersRes.data);
                     setAllProducts(productsRes.data);
                 } else {
-                    const res = await axios.get('http://localhost:5000/api/orders/myorders');
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/orders/myorders`);
                     setOrders(res.data);
                 }
             } catch (error) {
