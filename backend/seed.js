@@ -9,6 +9,9 @@ const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const seedDatabase = async () => {
     try {
         const maskedUri = process.env.MONGODB_URI.replace(/:([^@]+)@/, ':****@');
@@ -57,7 +60,11 @@ const seedDatabase = async () => {
                 });
             })
             .on('end', async () => {
-                console.log(`Parsed ${products.length} products. Inserting into database...`);
+                console.log(`Parsed ${products.length} products.`);
+                if (products.length > 0) {
+                    console.log('Sample Product:', JSON.stringify(products[0], null, 2));
+                }
+                console.log('Inserting into database...');
                 
                 await Product.deleteMany({});
                 
