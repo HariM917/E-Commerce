@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
@@ -83,7 +84,7 @@ app.get('/api/seed', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('API is running...  (v2)');
+    res.send('API is running... (v2)');
 });
 
 const PORT = process.env.PORT || 5000;
