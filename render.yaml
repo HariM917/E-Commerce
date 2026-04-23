@@ -24,4 +24,4 @@ services:
     publishDir: dist
     envVars:
       - key: VITE_API_URL
-        value: https://e-commerce-backend.onrender.com/api
+        value: https://e-commerce-x88i.onrender.com/api
