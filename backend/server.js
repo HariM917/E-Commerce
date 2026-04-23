@@ -10,11 +10,21 @@ const Product = require('./models/Product');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
 
+// Custom Logging
+const logPath = path.join(__dirname, 'logs.txt');
+const logger = (msg) => {
+    const entry = `${new Date().toISOString()} - ${msg}\n`;
+    fs.appendFileSync(logPath, entry);
+    console.log(msg);
+};
+logger('Server starting...');
+
 // Load env vars
 dotenv.config();
 
 // Connect to database
-connectDB();
+logger('Connecting to DB...');
+connectDB().then(() => logger('DB connected!')).catch(err => logger('DB Error: ' + err.message));
 
 const app = express();
 
@@ -26,6 +36,15 @@ app.use(cors());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+
+// Remote Log Viewer
+app.get('/api/logs', (req, res) => {
+    if (fs.existsSync(logPath)) {
+        res.sendFile(logPath);
+    } else {
+        res.send('No logs found');
+    }
+});
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
