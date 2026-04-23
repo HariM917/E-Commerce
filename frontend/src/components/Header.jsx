@@ -74,7 +74,7 @@ const Header = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <User size={20} />
-                                <span>{user.name.split(' ')[0]}</span>
+                                <span>{user?.name ? user.name.split(' ')[0] : 'User'}</span>
                             </Link>
                             <button onClick={() => { logout(); navigate('/'); }} style={{ color: '#fff', fontSize: '0.9rem', cursor: 'pointer' }}>
                                 Logout

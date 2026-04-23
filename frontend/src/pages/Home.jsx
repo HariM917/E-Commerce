@@ -100,13 +100,13 @@ const Home = () => {
                                     </p>
                                     <Link to={`/products/${product._id}`} style={{ flex: 1 }}>
                                         <h3 style={{ fontSize: '1rem', fontWeight: '400', lineHeight: '1.4', marginBottom: '8px', color: 'var(--text-primary)' }}>
-                                            {product.name.length > 50 ? `${product.name.substring(0, 50)}...` : product.name}
+                                            {product?.name ? (product.name.length > 50 ? `${product.name.substring(0, 50)}...` : product.name) : 'Unnamed Product'}
                                         </h3>
                                     </Link>
                                     
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px' }}>
                                         <div className="price-tag">
-                                            ${product.price.toFixed(2)}
+                                            ${(product?.price || 0).toFixed(2)}
                                         </div>
                                     </div>
                                     
